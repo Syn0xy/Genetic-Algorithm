@@ -14,12 +14,11 @@ pub trait GameManager<I: Individual> {
     fn generate_population(&mut self, population: &Vec<I>);
     fn update_cycle(&mut self);
     fn end_generation(&mut self, population: &mut Vec<I>);
+    fn draw(&mut self);
 }
 
 impl GameManager<SurvivorIndividual> for EntityManager {
     fn generate_population(&mut self, population: &Vec<SurvivorIndividual>) {
-        self.clear();
-
         for _ in 0..25 {
             spawn_enemy(self);
             spawn_food(self);
@@ -44,6 +43,30 @@ impl GameManager<SurvivorIndividual> for EntityManager {
                 .iter_mut()
                 .find(|individual| individual.id == survivor.individual_id)
                 .map(|individual| individual.fitness *= fitness);
+        }
+    }
+
+    fn draw(&mut self) {
+        let height = 50i32;
+        let width = height;
+
+        let mut buffer = vec!['.'; (width * height) as usize];
+
+        for (_, position) in self.get_components::<Position>() {
+            let px = (position.0.x + width as f32 / 2.0) as i32;
+            let py = (position.0.y + height as f32 / 2.0) as i32;
+            let index = (py * width + px) as usize;
+
+            if index < buffer.len() && px >= 0 && px < width && py >= 0 && py < height {
+                buffer[index] = 'X';
+            }
+        }
+
+        for y in 0..height {
+            for x in 0..width {
+                print!("{} ", buffer[(y * width + x) as usize]);
+            }
+            println!();
         }
     }
 }
@@ -82,7 +105,19 @@ fn spawn_food(manager: &mut EntityManager) -> EntityId {
         .id()
 }
 
-fn update_survivors(_manager: &mut EntityManager) {}
+fn update_survivors(manager: &mut EntityManager) {
+    for (id, _) in manager.get_components::<Survivor>() {
+        let (Some(mut position), Some(speed)) = (
+            manager.entity_component_first_mut::<Position>(&id),
+            manager.entity_component_first::<Speed>(&id),
+        ) else {
+            continue;
+        };
+
+        position.0.x += 1.0 * speed.0;
+        position.0.y += 0.0 * speed.0;
+    }
+}
 
 fn update_enemies(manager: &mut EntityManager) {
     for (id, enemy) in manager.get_components::<Enemy>() {
@@ -133,33 +168,5 @@ fn update_foods(manager: &mut EntityManager) {
                 life.eat(&food);
             }
         }
-    }
-}
-
-pub fn draw(manager: &mut EntityManager) {
-    let height = 50i32;
-    let width = height;
-
-    let mut buffer = vec!['.'; (width * height) as usize];
-
-    for (_, position) in manager.get_components::<Position>() {
-        // let Some(cercle) = self.entity_component_first::<Cercle>(&id) else {
-        //     continue;
-        // };
-
-        let px = (position.0.x + width as f32 / 2.0) as i32;
-        let py = (position.0.y + height as f32 / 2.0) as i32;
-        let index = (py * width + px) as usize;
-
-        if index < buffer.len() && px >= 0 && px < width && py >= 0 && py < height {
-            buffer[index] = 'X';
-        }
-    }
-
-    for y in 0..height {
-        for x in 0..width {
-            print!("{} ", buffer[(y * width + x) as usize]);
-        }
-        println!();
     }
 }

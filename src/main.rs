@@ -3,7 +3,6 @@ use std::{
     time::{Duration, Instant},
 };
 
-use ga_app::prelude::{App, Startup};
 use ga_core::prelude::Simulation;
 use ga_ecs::prelude::EntityManager;
 use ga_game::prelude::{GameManager, SurvivorManager};
@@ -25,12 +24,13 @@ fn main() {
         simulation.generation();
         let population = simulation.population_mut();
 
+        entity_manager.clear();
         entity_manager.generate_population(&population);
 
         for _ in 0..CYCLE_COUNT {
             entity_manager.update_cycle();
-            // entity_manager.draw();
-            thread::sleep(Duration::from_secs_f32(0.1));
+            entity_manager.draw();
+            thread::sleep(Duration::from_secs_f32(0.05));
         }
 
         entity_manager.end_generation(population);
@@ -38,7 +38,7 @@ fn main() {
 
     simulation.display();
 
-    println!("Time elapsed : {:?}", start.elapsed());
+    println!("Time elapsed : {:?}", 1.0 / start.elapsed().as_secs_f32());
 
-    App::new().add_systems(Startup, [|| {}]);
+    // App::new().add_systems(Startup, [|| {}]);
 }

@@ -1,9 +1,9 @@
 use ga_core::prelude::{GeneRange, GeneSpec};
 
-pub const GENERATION_MAX: usize = 256;
+pub const GENERATION_MAX: usize = 8;
 pub const POPULATION_SIZE: usize = 16;
 pub const TOURNAMENT_SIZE: usize = 4; // sqrt(POPULATION_SIZE)
-pub const CYCLE_COUNT: usize = 100;
+pub const CYCLE_COUNT: usize = 50;
 pub const GENOME_SPECS: &[GeneSpec] = &[
     GeneSpec {
         name: "Behaviour",

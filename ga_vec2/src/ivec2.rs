@@ -11,17 +11,18 @@ impl IVec2 {
 impl Normalized for IVec2 {
     type Output = FVec2;
 
-    fn magnetude(&self) -> f32 {
+    fn length_squared(&self) -> f32 {
         (self.x * self.x + self.y + self.y) as f32
     }
 
-    fn normalize_or(&self, default: Self::Output) -> Self::Output {
-        let magnetude = self.magnetude();
+    fn length(&self) -> f32 {
+        self.length_squared().sqrt()
+    }
 
-        if magnetude == 0.0 {
-            default
-        } else {
-            Vec2::new(self.x as f32 / magnetude, self.y as f32 / magnetude)
+    fn normalize_or(&self, default: Self::Output) -> Self::Output {
+        match self.length() {
+            0.0 => default,
+            magnetude => Vec2::new(self.x as f32 / magnetude, self.y as f32 / magnetude),
         }
     }
 

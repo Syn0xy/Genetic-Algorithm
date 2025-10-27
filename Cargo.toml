@@ -11,25 +11,25 @@ codegen-units = 1
 
 [workspace]
 members = [
-    "ga_app",
     "ga_core",
     "ga_ecs",
     "ga_game",
+    "ga_survivor_simulation",
     "ga_vec2",
     ".",
 ]
 
 [workspace.dependencies]
-ga_app = { path = "./ga_app" }
 ga_core = { path = "./ga_core" }
 ga_ecs = { path = "./ga_ecs" }
 ga_game = { path = "./ga_game" }
+ga_survivor_simulation = { path = "./ga_survivor_simulation" }
 ga_vec2 = { path = "./ga_vec2" }
 rand = "0.9.2"
 
 
 [dependencies]
-ga_app.workspace = true
 ga_core.workspace = true
 ga_ecs.workspace = true
 ga_game.workspace = true
+ga_survivor_simulation.workspace = true

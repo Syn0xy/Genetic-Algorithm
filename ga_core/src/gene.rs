@@ -1,21 +1,25 @@
+pub trait Gene {
+    fn global_range(&self) -> GeneRange;
+    fn mutation_range(&self) -> GeneRange;
+    fn mutation_rate(&self) -> f64;
+
+    fn clamp(&self, a: f32) -> f32 {
+        self.global_range().clamp(a)
+    }
+
+    fn random_global(&self) -> f32 {
+        self.global_range().random_value()
+    }
+
+    fn random_mutation(&self) -> f32 {
+        self.mutation_range().random_value()
+    }
+}
+
 #[derive(Debug, Clone, Copy)]
 pub struct GeneRange {
     min: f32,
     max: f32,
-}
-
-#[derive(Debug, Clone, Copy)]
-pub struct GeneSpec {
-    pub name: &'static str,
-    pub init_range: GeneRange,
-    pub mut_range: GeneRange,
-    pub mutation_rate: f32,
-}
-
-impl GeneSpec {
-    pub const fn clamp(&self, v: f32) -> f32 {
-        self.init_range.clamp(v)
-    }
 }
 
 impl GeneRange {
@@ -23,17 +27,11 @@ impl GeneRange {
         Self { min, max }
     }
 
-    pub const fn clamp(&self, v: f32) -> f32 {
-        v.clamp(self.min, self.max)
+    pub const fn clamp(&self, a: f32) -> f32 {
+        a.clamp(self.min, self.max)
     }
 
     pub fn random_value(&self) -> f32 {
-        rand::random_range(self.min..self.max)
+        rand::random_range(self.min..=self.max)
     }
-}
-
-pub trait Gene {
-    fn init_range(&self) -> GeneRange;
-    fn mut_range(&self) -> GeneRange;
-    fn mutation_rate(&self) -> f32;
 }

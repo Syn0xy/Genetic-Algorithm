@@ -1,44 +1,70 @@
-use std::{
-    thread,
-    time::{Duration, Instant},
-};
+use ga_core::prelude::{Individual, IndividualManager, SimulationHandler};
+use ga_game::prelude::WorldManager;
+use ga_survivor_simulation::prelude::SurvivorManager;
 
-use ga_core::prelude::Simulation;
-use ga_ecs::prelude::EntityManager;
-use ga_game::prelude::{GameManager, SurvivorManager};
-
-use crate::config::{CYCLE_COUNT, GENERATION_MAX, GENOME_SPECS, POPULATION_SIZE, TOURNAMENT_SIZE};
-
-mod config;
+const POPULATION_SIZE: usize = 16;
+const GENERATION_MAX: usize = 8;
+const _CYCLE_COUNT: usize = 50;
 
 fn main() {
-    let manager = SurvivorManager::new(TOURNAMENT_SIZE, GENOME_SPECS.to_vec());
-    let mut simulation = Simulation::new(manager);
-    let mut entity_manager = EntityManager::new();
+    let mut world = WorldManager::new();
 
-    simulation.init(POPULATION_SIZE);
+    world.add_simulation(SimulationHandler::new(
+        SurvivorManager::new(),
+        POPULATION_SIZE,
+    ));
 
-    let start = Instant::now();
+    world.add_simulation(SimulationHandler::new(FoodManager, 20));
+
+    world.initialize();
 
     for _ in 0..GENERATION_MAX {
-        simulation.generation();
-        let population = simulation.population_mut();
+        world.generate();
 
-        entity_manager.clear();
-        entity_manager.generate_population(&population);
+        // let population = simulation.population_mut();
 
-        for _ in 0..CYCLE_COUNT {
-            entity_manager.update_cycle();
-            entity_manager.draw();
-            thread::sleep(Duration::from_secs_f32(0.05));
-        }
+        // entity_manager.clear();
+        // entity_manager.generate_population(&population);
 
-        entity_manager.end_generation(population);
+        // for _ in 0..CYCLE_COUNT {
+        //     entity_manager.update_cycle();
+        //     // entity_manager.draw();
+        //     // thread::sleep(Duration::from_secs_f32(0.05));
+        // }
+
+        world.end_generation();
     }
 
-    simulation.display();
+    world.display();
+}
 
-    println!("Time elapsed : {:?}", 1.0 / start.elapsed().as_secs_f32());
+struct FoodManager;
+struct FoodIndividual;
 
-    // App::new().add_systems(Startup, [|| {}]);
+impl Individual for FoodIndividual {
+    fn id(&self) -> &ga_core::prelude::IndividualId {
+        &0
+    }
+
+    fn fitness(&self) -> f32 {
+        0.0
+    }
+}
+
+impl IndividualManager<FoodIndividual> for FoodManager {
+    fn build(&mut self, id: ga_core::prelude::IndividualId) -> I {
+        FoodIndividual
+    }
+
+    fn mutate(&self, _: &mut FoodIndividual) {}
+
+    fn crossover(&self, _: &mut FoodIndividual, _: &mut FoodIndividual) {}
+
+    fn calculate_fitness(&self, _: &mut FoodIndividual) -> f32 {
+        0.0
+    }
+
+    fn select_parent(&self, _: &Vec<FoodIndividual>) -> Option<FoodIndividual> {
+        Some(FoodIndividual)
+    }
 }

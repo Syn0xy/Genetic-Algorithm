@@ -1,10 +1,11 @@
 [package]
-name = "ga_game"
+name = "ga_survivor_simulation"
 version = "0.1.0"
 edition = "2024"
 
 [dependencies]
 ga_core.workspace = true
 ga_ecs.workspace = true
+ga_game.workspace = true
 ga_vec2.workspace = true
 rand.workspace = true

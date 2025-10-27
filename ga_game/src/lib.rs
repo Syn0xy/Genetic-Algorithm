@@ -1,12 +1,12 @@
 mod components;
-mod game_manager;
-mod survivor_individual;
-mod survivor_manager;
+mod debug;
+mod spawner;
+mod update;
 mod utils;
+mod world_manager;
 
 pub mod prelude {
     pub use crate::components::*;
-    pub use crate::game_manager::*;
-    pub use crate::survivor_individual::*;
-    pub use crate::survivor_manager::*;
+    pub use crate::spawner::*;
+    pub use crate::world_manager::*;
 }

@@ -1,27 +1,44 @@
 use ga_ecs::prelude::EntityManager;
 
-use crate::prelude::Position;
+use crate::{Position, Renderable};
 
-pub(crate) fn draw(manager: EntityManager) {
-    let height = 50i32;
-    let width = height;
+const HEIGHT: usize = 40;
+const WIDTH: usize = 80;
+const LENGTH: usize = WIDTH * HEIGHT;
 
-    let mut buffer = vec!['.'; (width * height) as usize];
+pub(crate) fn draw(manager: &EntityManager) {
+    let mut buffer = vec![None; LENGTH];
+    let mut output = String::with_capacity((LENGTH + HEIGHT) * 2);
 
-    for (_, position) in manager.components::<Position>() {
-        let px = (position.0.x + width as f32 / 2.0) as i32;
-        let py = (position.0.y + height as f32 / 2.0) as i32;
-        let index = (py * width + px) as usize;
+    for (id, position) in manager.components::<Position>() {
+        let Some(renderable) = manager.get_first::<Renderable>(id) else {
+            continue;
+        };
 
-        if index < buffer.len() && px >= 0 && px < width && py >= 0 && py < height {
-            buffer[index] = 'X';
+        let px = (position.0.x + WIDTH as f32 / 2.0).round() as i32;
+        let py = (position.0.y + HEIGHT as f32 / 2.0).round() as i32;
+
+        if px < 0 || py < 0 || px >= WIDTH as i32 || py >= HEIGHT as i32 {
+            continue;
+        }
+
+        if let Some(character) = buffer.get_mut((py * WIDTH as i32 + px) as usize) {
+            *character = Some(renderable.0);
         }
     }
 
-    for y in 0..height {
-        for x in 0..width {
-            print!("{} ", buffer[(y * width + x) as usize]);
+    for y in 0..HEIGHT {
+        for c in &buffer[y * WIDTH..(y + 1) * WIDTH] {
+            match c {
+                Some(character) => output.push(*character),
+                None => {
+                    output.push_str("  ");
+                }
+            }
         }
-        println!();
+
+        output.push('\n');
     }
+
+    print!("{}", output);
 }

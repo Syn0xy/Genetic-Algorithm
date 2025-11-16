@@ -1,6 +1,4 @@
-use crate::prelude::Individual;
-
-pub type IndividualId = u32;
+use crate::{Individual, IndividualId};
 
 pub trait IndividualManager<I: Individual> {
     fn build(&mut self, id: IndividualId) -> I;

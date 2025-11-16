@@ -3,6 +3,22 @@ use std::time::Instant;
 use ga_vec2::FVec2;
 
 #[derive(Debug)]
+pub struct Enemy {
+    pub attack: u8,
+    pub direction: FVec2,
+}
+
+#[derive(Debug)]
+pub struct Food {
+    pub amount: u8,
+}
+
+#[derive(Debug)]
+pub struct Survivor {
+    pub time_alive: Instant,
+}
+
+#[derive(Debug)]
 pub struct Position(pub FVec2);
 
 #[derive(Debug)]
@@ -22,17 +38,14 @@ pub enum Behaviour {
 }
 
 #[derive(Debug)]
-pub struct Enemy {
-    pub attack: u8,
-    pub direction: FVec2,
-}
+pub struct Renderable(pub char);
 
-#[derive(Debug)]
-pub struct Food {
-    pub amount: u8,
-}
+impl Life {
+    pub(crate) fn eat(&mut self, food: &Food) {
+        let _ = self.0.saturating_add(food.amount);
+    }
 
-#[derive(Debug)]
-pub struct Survivor {
-    pub time_alive: Instant,
+    pub(crate) fn take(&mut self, amount: u8) {
+        let _ = self.0.saturating_sub(amount);
+    }
 }

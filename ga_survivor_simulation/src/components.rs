@@ -1,25 +1,7 @@
-use ga_core::prelude::FromIndividual;
-use ga_game::prelude::{Behaviour, Cercle, Life, Speed};
+use ga_core::FromIndividual;
+use ga_game::{Behaviour, Cercle, Life, Speed};
 
-use crate::prelude::SurvivorIndividual;
-
-impl FromIndividual<SurvivorIndividual> for Cercle {
-    fn from_individual(individual: &SurvivorIndividual) -> Self {
-        Self(individual.genome[3])
-    }
-}
-
-impl FromIndividual<SurvivorIndividual> for Speed {
-    fn from_individual(individual: &SurvivorIndividual) -> Self {
-        Self(individual.genome[2])
-    }
-}
-
-impl FromIndividual<SurvivorIndividual> for Life {
-    fn from_individual(individual: &SurvivorIndividual) -> Self {
-        Self(individual.genome[1].round() as u8)
-    }
-}
+use crate::SurvivorIndividual;
 
 impl FromIndividual<SurvivorIndividual> for Behaviour {
     fn from_individual(individual: &SurvivorIndividual) -> Self {
@@ -30,5 +12,23 @@ impl FromIndividual<SurvivorIndividual> for Behaviour {
             1 => Behaviour::Hungry,
             _ => Behaviour::Fearful,
         }
+    }
+}
+
+impl FromIndividual<SurvivorIndividual> for Life {
+    fn from_individual(individual: &SurvivorIndividual) -> Self {
+        Self(individual.genome[1].round() as u8)
+    }
+}
+
+impl FromIndividual<SurvivorIndividual> for Speed {
+    fn from_individual(individual: &SurvivorIndividual) -> Self {
+        Self(individual.genome[2])
+    }
+}
+
+impl FromIndividual<SurvivorIndividual> for Cercle {
+    fn from_individual(individual: &SurvivorIndividual) -> Self {
+        Self(individual.genome[3])
     }
 }

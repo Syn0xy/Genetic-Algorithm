@@ -1,5 +1,5 @@
 pub mod collider {
-    use crate::prelude::{Cercle, Position};
+    use crate::{Cercle, Position};
 
     pub fn is_collision(ap: &Position, ac: &Cercle, bp: &Position, bc: &Cercle) -> bool {
         let Position(pos_a) = ap;

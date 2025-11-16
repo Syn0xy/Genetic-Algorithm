@@ -1,8 +1,8 @@
 use std::time::Instant;
 
-use ga_core::prelude::{FromIndividual, Individual, IndividualId};
+use ga_core::{FromIndividual, Individual, IndividualId};
 use ga_ecs::prelude::{EntityCommands, EntityId, IntoEntity};
-use ga_game::prelude::{Behaviour, Cercle, Life, Position, Speed, Survivor};
+use ga_game::{Behaviour, Cercle, Life, Position, Renderable, Speed, Survivor};
 use ga_vec2::FVec2;
 
 #[derive(Debug, Default, Clone)]
@@ -35,7 +35,11 @@ impl Individual for SurvivorIndividual {
 impl IntoEntity for SurvivorIndividual {
     fn build(&self, mut commands: EntityCommands<'_>) -> EntityId {
         commands
-            .insert(Position(FVec2::ZERO))
+            .insert(Renderable('🐁'))
+            .insert(Position(FVec2 {
+                x: rand::random_range(-40.0..=40.0),
+                y: rand::random_range(-20.0..=20.0),
+            }))
             .insert(Cercle::from_individual(self))
             .insert(Speed::from_individual(self))
             .insert(Life::from_individual(self))

@@ -1,40 +1,28 @@
 use std::{cmp::Ordering, mem};
 
-use ga_core::prelude::{Gene, Individual, IndividualId, IndividualManager};
+use ga_core::{Gene, Individual, IndividualId, IndividualManager};
 use rand::{Rng, seq::IndexedRandom};
 
-use crate::prelude::{BehaviourGene, HealthGene, SizeGene, SpeedGene, SurvivorIndividual};
+use crate::{SurvivorGene, SurvivorIndividual};
 
 const TOURNAMENT_SIZE: usize = 4;
+const SURVIVOR_GENOME: [SurvivorGene; 4] = [
+    SurvivorGene::Behaviour,
+    SurvivorGene::Health,
+    SurvivorGene::Speed,
+    SurvivorGene::Size,
+];
 
-pub struct SurvivorManager {
-    genes: Vec<Box<dyn Gene>>,
-}
-
-impl SurvivorManager {
-    pub fn new() -> Self {
-        Self {
-            genes: vec![
-                Box::new(BehaviourGene),
-                Box::new(HealthGene),
-                Box::new(SpeedGene),
-                Box::new(SizeGene),
-            ],
-        }
-    }
-
-    fn create_genome(&self) -> Vec<f32> {
-        self.genes.iter().map(|spec| spec.random_global()).collect()
-    }
-}
+#[derive(Default)]
+pub struct SurvivorManager;
 
 impl IndividualManager<SurvivorIndividual> for SurvivorManager {
     fn build(&mut self, id: IndividualId) -> SurvivorIndividual {
-        SurvivorIndividual::new(id, self.create_genome())
+        SurvivorIndividual::new(id, create_genome())
     }
 
     fn mutate(&self, individual: &mut SurvivorIndividual) {
-        for (spec, gene) in self.genes.iter().zip(&mut individual.genome) {
+        for (spec, gene) in SURVIVOR_GENOME.into_iter().zip(&mut individual.genome) {
             if rand::rng().random_bool(spec.mutation_rate()) {
                 *gene = spec.clamp(*gene + spec.random_mutation());
             }
@@ -60,6 +48,13 @@ impl IndividualManager<SurvivorIndividual> for SurvivorManager {
             .max_by(individual_sort)
             .cloned()
     }
+}
+
+fn create_genome() -> Vec<f32> {
+    SURVIVOR_GENOME
+        .into_iter()
+        .map(|spec| spec.random_global())
+        .collect()
 }
 
 fn individual_sort<T: Individual>(a: &&T, b: &&T) -> Ordering {

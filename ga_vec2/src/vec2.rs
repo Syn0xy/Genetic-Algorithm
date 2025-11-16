@@ -1,8 +1,6 @@
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
 
-use crate::Randomized;
-
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone, Copy)]
 pub struct Vec2<T> {
     pub x: T,
     pub y: T,
@@ -13,17 +11,6 @@ impl<T> Vec2<T> {
         Self { x, y }
     }
 }
-
-impl<T: Clone> Clone for Vec2<T> {
-    fn clone(&self) -> Self {
-        Self {
-            x: self.x.clone(),
-            y: self.y.clone(),
-        }
-    }
-}
-
-impl<T: Copy> Copy for Vec2<T> {}
 
 impl<T: Add<Output = T>> Add for Vec2<T> {
     type Output = Self;
@@ -94,22 +81,5 @@ impl<T: DivAssign> DivAssign for Vec2<T> {
     fn div_assign(&mut self, rhs: Self) {
         self.x.div_assign(rhs.x);
         self.y.div_assign(rhs.y);
-    }
-}
-
-impl<T> Randomized<T> for Vec2<T>
-where
-    T: rand::distr::uniform::SampleUniform,
-{
-    type Output = Vec2<T>;
-
-    fn random_range<R>(range: R) -> Self::Output
-    where
-        R: rand::distr::uniform::SampleRange<T> + Clone,
-    {
-        Self::Output {
-            x: rand::random_range(range.clone()),
-            y: rand::random_range(range),
-        }
     }
 }

@@ -1,11 +1,8 @@
 mod components;
+mod genes;
+mod manager;
+mod survivor;
 
-pub mod genes;
-pub mod manager;
-pub mod survivor;
-
-pub mod prelude {
-    pub use crate::genes::*;
-    pub use crate::manager::*;
-    pub use crate::survivor::*;
-}
+pub use crate::genes::*;
+pub use crate::manager::*;
+pub use crate::survivor::*;

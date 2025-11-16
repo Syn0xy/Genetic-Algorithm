@@ -1,86 +1,112 @@
-// use ga_ecs::prelude::EntityManager;
-// use ga_vec2::Normalized;
+use std::collections::HashSet;
 
-// use crate::{
-//     prelude::{Cercle, Enemy, Food, Position, Speed, Survivor},
-//     utils::collider,
-// };
+use ga_ecs::prelude::EntityManager;
+use ga_vec2::Normalized;
 
-// fn update_survivors(manager: &mut EntityManager) {
-//     for (id, _) in manager.components::<Survivor>() {
-//         let entity = manager.entity(id);
+use crate::{
+    utils::collider,
+    {Cercle, Enemy, Food, Life, Position, Speed, Survivor},
+};
 
-//         let (Some(mut position), Some(speed)) = (
-//             entity.get_first_mut::<Position>(),
-//             entity.get_first::<Speed>(),
-//         ) else {
-//             continue;
-//         };
+pub fn update_foods(manager: &mut EntityManager) {
+    let mut food_destroy = HashSet::new();
 
-//         position.0.x += 1.0 * speed.0;
-//         position.0.y += 0.0 * speed.0;
-//     }
-// }
+    for (id, food) in manager.components::<Food>() {
+        let (Some(food_position), Some(food_cercle)) = (
+            manager.get_first::<Position>(id),
+            manager.get_first::<Cercle>(id),
+        ) else {
+            continue;
+        };
 
-// fn update_enemies(manager: &mut EntityManager) {
-//     for (enemy_id, enemy) in manager.components::<Enemy>() {
-//         let enemy_entity = manager.entity(enemy_id);
+        for (survivor_id, _) in manager.components_mut::<Survivor>() {
+            let (Some(mut survivor_life), Some(survivor_position), Some(survivor_cercle)) = (
+                manager.get_first_mut::<Life>(survivor_id),
+                manager.get_first::<Position>(survivor_id),
+                manager.get_first::<Cercle>(survivor_id),
+            ) else {
+                continue;
+            };
 
-//         let (Some(mut position), Some(cercle)) = (
-//             enemy_entity.get_first_mut::<Position>(),
-//             enemy_entity.get_first::<Cercle>(),
-//         ) else {
-//             continue;
-//         };
+            if collider::is_collision(
+                &food_position,
+                &food_cercle,
+                &survivor_position,
+                &survivor_cercle,
+            ) {
+                survivor_life.eat(&food);
+                food_destroy.insert(id);
+            }
+        }
+    }
 
-//         position.0 += enemy.direction.normalize_or_zero();
+    for food_id in food_destroy {
+        manager.destroy(food_id);
+    }
+}
 
-//         for (survivor_id, mut survivor) in manager.components_mut::<Survivor>() {
-//             let survivor_entity = manager.entity(survivor_id);
+pub fn update_enemies(manager: &mut EntityManager) {
+    let mut survivor_destroy = HashSet::new();
 
-//             let (Some(survivor_position), Some(survivor_cercle)) = (
-//                 survivor_entity.get_first::<Position>(),
-//                 survivor_entity.get_first::<Cercle>(),
-//             ) else {
-//                 continue;
-//             };
+    for (id, mut enemy) in manager.components_mut::<Enemy>() {
+        let (Some(mut position), Some(cercle)) = (
+            manager.get_first_mut::<Position>(id),
+            manager.get_first::<Cercle>(id),
+        ) else {
+            continue;
+        };
 
-//             if collider::is_collision(&position, &cercle, &survivor_position, &survivor_cercle) {
-//                 survivor.life -= enemy.attack;
-//             }
-//         }
-//     }
-// }
+        let enemy_p = &mut position.0;
 
-// fn update_foods(manager: &mut EntityManager) {
-//     for (food_id, food) in manager.components::<Food>() {
-//         let food_entity = manager.entity(food_id);
+        *enemy_p += enemy.direction.normalize_or_zero();
 
-//         let (Some(food_position), Some(food_cercle)) = (
-//             food_entity.get_first::<Position>(),
-//             food_entity.get_first::<Cercle>(),
-//         ) else {
-//             continue;
-//         };
+        if enemy_p.x.abs() > 40.0 {
+            enemy.direction.x = -enemy.direction.x;
+            enemy_p.x = enemy_p.x.clamp(-40.0, 40.0);
+        }
 
-//         for (survivor_id, mut survivor) in manager.components_mut::<Survivor>() {
-//             let survivor_entity = manager.entity(survivor_id);
+        if enemy_p.y.abs() > 20.0 {
+            enemy.direction.y = -enemy.direction.y;
+            enemy_p.y = enemy_p.y.clamp(-20.0, 20.0);
+        }
 
-//             let (Some(survivor_position), Some(survivor_cercle)) = (
-//                 survivor_entity.get_first::<Position>(),
-//                 survivor_entity.get_first::<Cercle>(),
-//             ) else {
-//                 continue;
-//             };
+        for (survivor_id, _) in manager.components_mut::<Survivor>() {
+            let (Some(mut survivor_life), Some(survivor_position), Some(survivor_cercle)) = (
+                manager.get_first_mut::<Life>(survivor_id),
+                manager.get_first::<Position>(survivor_id),
+                manager.get_first::<Cercle>(survivor_id),
+            ) else {
+                continue;
+            };
 
-//             if collider::is_collision(
-//                 &food_position,
-//                 &food_cercle,
-//                 &survivor_position,
-//                 &survivor_cercle,
-//             ) {
-//                 survivor.eat(&food);
-//             }
-//         }
-//     }
-// }
+            if collider::is_collision(&position, &cercle, &survivor_position, &survivor_cercle) {
+                survivor_life.take(enemy.attack);
+
+                if survivor_life.0 == 0 {
+                    survivor_destroy.insert(survivor_id);
+                }
+            }
+        }
+    }
+
+    for survivor in survivor_destroy {
+        manager.destroy(survivor);
+    }
+}
+
+pub fn update_survivors(manager: &mut EntityManager) {
+    for (id, _) in manager.components::<Survivor>() {
+        let (Some(mut position), Some(speed)) = (
+            manager.get_first_mut::<Position>(id),
+            manager.get_first::<Speed>(id),
+        ) else {
+            continue;
+        };
+
+        if rand::random() {
+            position.0.x += speed.0 * rand::random_range(-1.0..=1.0);
+        } else {
+            position.0.y += speed.0 * rand::random_range(-1.0..=1.0);
+        }
+    }
+}

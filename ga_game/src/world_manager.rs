@@ -1,33 +1,28 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, fmt::Debug};
 
-use ga_core::prelude::{Individual, IndividualId, Simulation};
+use ga_core::{Individual, IndividualId, IndividualManager, Simulation};
 use ga_ecs::prelude::{EntityId, EntityManager, IntoEntity};
 
-use crate::spawner::{EnemyEntity, FoodEntity};
+use crate::{
+    debug,
+    entity::{EnemyEntity, FoodEntity},
+    update,
+};
 
 #[derive(Default)]
-pub struct WorldManager<I: Individual + IntoEntity> {
+pub struct WorldManager<I: Individual, IM: IndividualManager<I>> {
     entity_manager: EntityManager,
-    simulations: Vec<Box<dyn Simulation<I>>>,
+    simulation: Simulation<I, IM>,
     individual_entities: HashMap<EntityId, IndividualId>,
 }
 
-impl<I: Individual + IntoEntity + Default> WorldManager<I> {
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    pub fn add_simulation<T: Simulation<I> + 'static>(&mut self, simulation: T) {
-        self.simulations.push(Box::new(simulation));
-    }
-
-    pub fn initialize(&mut self) {
-        for s in &mut self.simulations {
-            s.initialize_population();
-        }
-    }
-
+impl<I, IM> WorldManager<I, IM>
+where
+    I: Individual + IntoEntity,
+    IM: IndividualManager<I>,
+{
     pub fn generate(&mut self) {
+        self.simulation.generation();
         self.individual_entities.clear();
         self.entity_manager.clear();
 
@@ -36,27 +31,49 @@ impl<I: Individual + IntoEntity + Default> WorldManager<I> {
             self.entity_manager.insert_entity(&FoodEntity);
         }
 
-        for s in &self.simulations {
-            for individual in s.population() {
-                let entity_id = self.entity_manager.insert_entity(individual);
+        for individual in self.simulation.population() {
+            let entity_id = self.entity_manager.insert_entity(individual);
 
-                self.individual_entities.insert(entity_id, *individual.id());
-            }
+            self.individual_entities.insert(entity_id, *individual.id());
+        }
+    }
+}
+
+impl<I, IM> WorldManager<I, IM>
+where
+    I: Individual,
+    IM: IndividualManager<I>,
+{
+    pub fn new(manager: IM) -> Self {
+        Self {
+            entity_manager: Default::default(),
+            simulation: Simulation::new(manager),
+            individual_entities: Default::default(),
         }
     }
 
-    pub fn end_generation(&mut self) {
-        // for (_, survivor) in self.entity_manager.components::<Survivor>() {
-        //     let fitness = survivor.time_alive.elapsed().as_secs_f32();
-
-        //     population
-        //         .iter_mut()
-        //         .find(|individual| individual.id == survivor.individual_id)
-        //         .map(|individual| individual.fitness *= fitness);
-        // }
+    pub fn initialize(&mut self, population_size: usize) {
+        self.simulation.initialize_population(population_size);
     }
 
-    pub fn display(&self) {
-        self.simulations.iter().for_each(|s| s.print_result());
+    pub fn update(&mut self) {
+        update::update_foods(&mut self.entity_manager);
+        update::update_enemies(&mut self.entity_manager);
+        update::update_survivors(&mut self.entity_manager);
+    }
+
+    pub fn display_world(&self) {
+        println!("\x1B[2J\x1B[1;1H");
+        debug::draw(&self.entity_manager);
+    }
+}
+
+impl<I, IM> WorldManager<I, IM>
+where
+    I: Individual + Debug,
+    IM: IndividualManager<I>,
+{
+    pub fn display_simulations(&self) {
+        self.simulation.print_result();
     }
 }

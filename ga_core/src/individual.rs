@@ -1,4 +1,4 @@
-use crate::individual_manager::IndividualId;
+pub type IndividualId = u32;
 
 pub trait Individual {
     fn id(&self) -> &IndividualId;
